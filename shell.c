@@ -3,10 +3,11 @@
 #include<stdlib.h>
 #include<unistd.h>
 #define SIZE 100
+
 char* takeInput(void){
-    int bufferSize = SIZE;
+    
     int position=0;
-    char *buffer = malloc(sizeof(char) * bufferSize);
+    char *buffer = malloc(sizeof(char) * SIZE);
     int charac;
     while(1){
      charac = getchar();
@@ -19,6 +20,16 @@ char* takeInput(void){
      position+1;
     }
 
+}
+char** tokenizer(char* input){
+    int buffersize = SIZE;
+    int position = 0;
+    int charac;
+    char** tokens = malloc(sizeof(char) * SIZE);
+    char* token;
+    while(1){
+        
+    }
 }
 int main(int argc, char **argv){
   
