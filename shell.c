@@ -3,9 +3,10 @@
 #include<stdlib.h>
 #include<unistd.h>
 #include<sys/wait.h>
+#include<fcntl.h>
 #define SIZE 100
 //#define ESCAPE_CHARACTER " \t\r\a\n"
-
+int redirect();
 char* takeInput();
 char** tokenizer();
 
@@ -45,7 +46,29 @@ char** tokenizer(char* input){
   return word_array;
 }
 
-int main(int argc, char **argv){
+int redirect(){
+  int rc = fork();
+  if(rc < 0){
+    fprintf(stderr, "Fork failed\n");
+    exit(1);
+  }
+  else if(rc == 0){
+    close(SDTOUT_FILENO);
+    open("./p4-output.txt", O_CREAT | O_WRONLY | O_TRUNC, S_IRWXU);
+    char *myargs[3];
+    myargs[0] = strdup("WC");
+    myargs[1] = strdup("redirect.c");
+    myargs[2] = NULL;
+    execvp(myargs[0], myargs);
+  }
+  else{
+    int wc = wait(NULL);
+  }
+  return 0;
+
+}
+
+int main(int argc, char *argv[]){
   
   char* prompt;
   while(1){
