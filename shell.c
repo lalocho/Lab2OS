@@ -2,7 +2,13 @@
 #include<string.h>
 #include<stdlib.h>
 #include<unistd.h>
+#include<sys/wait.h>
 #define SIZE 100
+//#define ESCAPE_CHARACTER " \t\r\a\n"
+
+char* takeInput();
+char** tokenizer();
+
 
 char* takeInput(void){
     
@@ -22,15 +28,23 @@ char* takeInput(void){
 
 }
 char** tokenizer(char* input){
-    int buffersize = SIZE;
-    int position = 0;
-    int charac;
-    char** tokens = malloc(sizeof(char) * SIZE);
-    char* token;
-    while(1){
-        
+  //int buffersize = SIZE;
+  int index= 0;
+  int charac;
+  char** word_array = malloc(sizeof(char) * SIZE);
+  char* word;
+
+  word = strtok(input," \t\a\r\n");
+      
+  while(word){
+    word_array[index] = word;
+    index ++;
+    word = strtok(NULL, "\t\a\r\n");
     }
+  word_array[index] = NULL;
+  return word_array;
 }
+
 int main(int argc, char **argv){
   
   char* prompt;
