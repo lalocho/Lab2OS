@@ -15,33 +15,36 @@
 #include<sys/wait.h>
 #define SIZE  100
 #define ESCAPE_CHARACTERS " \a\n\r\t"
+//Method declaration
 char** parser(char* input);
 int redirect(char** myargs);
 int changeDir(char** input);
 int exe(char** myargs);
-void redirectIO(char** input);
 char** parserPipe(char* input);
 void pipeIT(char** inputA,char** inputB,char** allinput);
 
 int redirect(char** myargs){
-  int rc = fork();
-  if(rc < 0){
-    fprintf(stderr, "Fork failed\n");
-    exit(1);
-  }
-  else if(rc == 0){
-     
-     execvp(myargs[0], myargs);
-  }
-  else{
-    int wc = wait(NULL);
-    if (WIFEXITED(wc)) {
-        printf(" command not found");
-    } 
-    return WIFEXITED(wc);
-  }
-  return 0;
+    int rc = fork();
+    if (rc < 0) {
+        // fork failed; exit
+        fprintf(stderr, "fork failed\n");
+        exit(1);
+    } else if (rc == 0) {
+	// child: redirect standard output to a file
+	close(STDOUT_FILENO); 
+	open("./p4-output.txt", O_CREAT|O_WRONLY|O_TRUNC, S_IRWXU);
 
+	// now exec "wc"...
+        char *myargs[3];
+        myargs[0] = strdup("wc");   // program: "wc" (word count)
+        myargs[1] = strdup("p4-redirect.text"); // argument: file to count
+        myargs[2] = NULL;           // marks end of array
+        execvp(myargs[0], myargs);  // runs word count
+    } else {
+        // parent goes down this path (original process)
+        int wc = wait(NULL);
+    }
+    return 0;
 }
 
 /*
@@ -68,21 +71,13 @@ int exe(char** parsedCommand){
     return WIFEXITED(wc);
   }
   return 0;
-
 }
 /*
  * changes directory
  */
 
-
 int changeDir(char** input){
-   
-    
     return chdir(input[1]);
-    
-}
-void redirectIO(char** input){
-      
 }
 
 /*
@@ -206,19 +201,22 @@ int main(){
     parsedPipedCommand = parserPipe(command);
     if(strcmp(parsedCommand[0],"exit") == 0){
         break;
-    }else if(strcmp(parsedCommand[0] , "cd") == 0){
+    }
+    else if(strcmp(parsedCommand[0] , "cd") == 0){
         status = changeDir(parsedCommand);
-    }else if(parsedPipedCommand != NULL){
+    }
+    else if(strcmp(parsedCommand[0] , ">") == 0){
+        status = redirect(parsedCommand);
+    }
+    else if(parsedPipedCommand != NULL){
         printf("piped command");
         char* commandA = parsedCommand[0];
         char* commandB = parsedCommand[1];
         char** parsedCommandB = parser(commandB);
         char** parsedCommandA = parser(commandB);
         pipeIT(parsedCommandA,parsedCommandB,parsedPipedCommand);
-        
     }
     else{
-   
         status = exe(parsedCommand);
     
     }
