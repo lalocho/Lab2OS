@@ -18,7 +18,6 @@
 char** parser(char* input);
 int redirect(char** myargs);
 int changeDir(char** input);
-int redirect(char** myargs);
 int exe(char** myargs);
 void redirectIO(char** input);
 char** parserPipe(char* input);
@@ -44,6 +43,10 @@ int redirect(char** myargs){
   return 0;
 
 }
+
+/*
+ * creates a children process and executes command in it. Parent waits for children
+ */
 int exe(char** parsedCommand){
   int rc = fork();
   if(rc < 0){
@@ -67,11 +70,13 @@ int exe(char** parsedCommand){
   return 0;
 
 }
-
+/*
+ * changes directory
+ */
 
 
 int changeDir(char** input){
-    char s[100];
+   
     
     return chdir(input[1]);
     
@@ -79,6 +84,10 @@ int changeDir(char** input){
 void redirectIO(char** input){
       
 }
+
+/*
+ * Executes a piped command by creating two children and writing from one to the other
+ */
 void pipeIT(char** inputA,char** inputB,char** allinput){
      int pipefd[2];  
      pid_t p1, p2; 
@@ -178,6 +187,7 @@ char** parserPipe(char* input){
 int main(){
   char *command;
   char **parsedCommand;
+  char **parsedPipedCommand;
   int status=1;
   char *prompt;
   while(1){
@@ -192,37 +202,32 @@ int main(){
     getline(&command, &bufsize, stdin);
     
     //checks first if command is piped, otherwise executes normally.
-    parsedCommand = parserPipe(command);
-    
-    if(parsedCommand != NULL){
+    parsedCommand = parser(command);
+    parsedPipedCommand = parserPipe(command);
+    if(strcmp(parsedCommand[0],"exit") == 0){
+        break;
+    }else if(strcmp(parsedCommand[0] , "cd") == 0){
+        status = changeDir(parsedCommand);
+    }else if(parsedPipedCommand != NULL){
         printf("piped command");
         char* commandA = parsedCommand[0];
         char* commandB = parsedCommand[1];
         char** parsedCommandB = parser(commandB);
         char** parsedCommandA = parser(commandB);
-        pipeIT(parsedCommandA,parsedCommandB,parsedCommand);
+        pipeIT(parsedCommandA,parsedCommandB,parsedPipedCommand);
         
     }
     else{
-    parsedCommand = parser(command);
-    
-    if(strcmp(parsedCommand[0],"exit") == 0){
-        break;
-    }else if(strcmp(parsedCommand[0] , "cd") == 0){
-        status = changeDir(parsedCommand);
-    }else if(strcmp(parsedCommand[0] , ">") == 0){
-        break;
-    }else if(strcmp(parsedCommand[0] , "|") == 0){
-        redirectIO(parsedCommand);
-    }else{
+   
         status = exe(parsedCommand);
-    }
+    
     }
     if(status){
         printf("Program terminated with exit code : %d\n", status);
     }
     free(command);
     free(parsedCommand);
+    free(parsedPipedCommand);
   } 
   printf("Program terminated with exit code : %d\n", status);
   exit(0);
